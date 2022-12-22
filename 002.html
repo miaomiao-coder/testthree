@@ -27,7 +27,6 @@
         //将渲染器作为body的子节点
         document.body.appendChild(renderer.domElement);
 
-
         //创建几何体
         var boxGeometry = new THREE.BoxGeometry(10, 10, 10);
         //创建材质
@@ -37,8 +36,8 @@
         //将网格加入场景
         scene.add(cube);
         //x、y轴旋转角度
-        cube.rotation.x = 0.5;
-        cube.rotation.y = 0.5;
+        // cube.rotation.x = 0.5;
+        // cube.rotation.y = 0.5;
 
         //三维坐标轴
         var axes = new THREE.AxesHelper(50);
