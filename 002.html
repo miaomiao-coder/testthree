@@ -24,15 +24,24 @@
         const renderer = new THREE.WebGLRenderer();
         //设置渲染器大小
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true
         //将渲染器作为body的子节点
         document.body.appendChild(renderer.domElement);
 
         //创建几何体
         var boxGeometry = new THREE.BoxGeometry(10, 10, 10);
         //创建材质
-        var boxMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        var boxMaterial = new THREE.MeshLambertMaterial({ color: 0xffff00 });
         //创建网格
         var cube = new THREE.Mesh(boxGeometry, boxMaterial);
+
+        //设置几何体的位置
+        cube.position.x = 5;
+        cube.position.y = 5;
+        cube.position.z = 5;
+        //Lambert材质且castShadow=true，几何体上的光影才起效果
+        cube.castShadow = true;
+
         //将网格加入场景
         scene.add(cube);
         //x、y轴旋转角度
@@ -49,12 +58,34 @@
         // camera.position.z = 8;
         // camera.position.set(0, 0, 100);
 
-        camera.position.x=-30
-        camera.position.y=45;
-        camera.position.z=35;
+        camera.position.x = -30
+        camera.position.y = 45;
+        camera.position.z = 35;
         //将摄像机的方向对准场景的中心点，
         camera.lookAt(scene.position);
 
+
+        //创建平面几何体（地面）
+        var planeGe = new THREE.PlaneGeometry(100, 100);
+        var planeMe = new THREE.MeshLambertMaterial({ color: 0xcccccc });
+        var plane = new THREE.Mesh(planeGe, planeMe);
+        //Math.PI=180°
+        plane.rotation.x = -0.5 * Math.PI;
+        //平面接收光影
+        plane.receiveShadow = true;
+        scene.add(plane);
+        //Lambert材质必须通过AmbientLight才能显示
+        var ambientLight = new THREE.AmbientLight(0xAAAAAA)
+        scene.add(ambientLight);
+
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.castShadow = true;
+        spotLight.position.set(-40, 30, -30);
+        //设置阴影效果
+        spotLight.shadow.mapSize = new THREE.Vector2(1024, 1024);
+        spotLight.shadow.camera.far = 120;
+        spotLight.shadow.camera.near = 40;
+        scene.add(spotLight);
         //渲染
         renderer.render(scene, camera);
 
