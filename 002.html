@@ -12,7 +12,7 @@
 </head>
 
 <body>
-
+    <script src="./dat/dat.gui.js"></script>
     <script type="module">
         import * as THREE from './three.js/Three.js';
         // Our Javascript will go here.
@@ -86,9 +86,45 @@
         spotLight.shadow.camera.far = 120;
         spotLight.shadow.camera.near = 40;
         scene.add(spotLight);
-        //渲染
-        renderer.render(scene, camera);
 
+        //渲染
+        // renderer.render(scene, camera);
+
+        //定义一个对象存放旋转/跳跃速度
+        var ctrlObj = { rotationSpeed: 0.05, jumpSpeed: 0.01 }
+        var ctrl = new dat.GUI();
+        //将定义的对象传给dat.gui,0，1为取值范围，不传则显示输入框
+        //详细设置可参考https://blog.csdn.net/weixin_46941477/article/details/115551149
+        ctrl.add(ctrlObj, "rotationSpeed", 0, 1);
+        ctrl.add(ctrlObj, "jumpSpeed", 0, 1);
+        renderAnimation();
+        var gap = 0;
+        function renderAnimation() {
+            //旋转
+            // cube.rotation.x+=0.05;
+            // cube.rotation.y+=0.05;
+            cube.rotation.x += ctrlObj.rotationSpeed;
+            cube.rotation.y += ctrlObj.rotationSpeed;
+
+            //跳跃速度
+            // gap+=0.01
+            gap += ctrlObj.jumpSpeed
+            cube.position.x = 25 + (20 * (Math.sin(gap)));
+            cube.position.y = 6 + (20 * Math.abs(Math.cos(gap)));
+            requestAnimationFrame(renderAnimation);
+            //渲染
+            renderer.render(scene, camera);
+        }
+        //实现场景自适应功能：1.监听浏览器热死则时间，并通过回调重写事件 2。回调中重新设置camera的aspect属性，设置渲染的长宽比
+        window.addEventListener("resize", onWIndowResize, false);
+        function onWIndowResize()
+        {
+            camera.aspect=window.innerWidth/window.innerHeight
+            //手动更新相机的投影矩阵
+            camera.updateProjectionMatrix();
+            //重置场景的渲染尺寸
+            camera.setSize(window.innerWidth,window.innerHeight);
+        }
     </script>
 </body>
 
