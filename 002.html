@@ -17,7 +17,12 @@
         import * as THREE from './three.js/Three.js';
         // Our Javascript will go here.
         //创建场景
-        const scene = new THREE.Scene();
+        var scene = new THREE.Scene();
+        //fog设置场景雾化效果
+        // scene.fog=new THREE.Fog(0xff0000,0.03,100)
+        // scene.fog=new THREE.FogExp2(0xffffff,0.02)
+        // overrideMaterial设置场景使用相同材质
+        // scene.overrideMaterial=new THREE.MeshLambertMaterial({color:0xff00ff})
         //透视摄像头
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         //渲染器
@@ -47,6 +52,41 @@
         //x、y轴旋转角度
         // cube.rotation.x = 0.5;
         // cube.rotation.y = 0.5;
+
+        //region
+        //创建几何体
+        var boxGeometry1 = new THREE.BoxGeometry(10, 10, 10);
+        //创建材质
+        var boxMaterial1 = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+        //创建网格
+        var cube1 = new THREE.Mesh(boxGeometry1, boxMaterial1);
+        cube1.name="cub2"
+
+        //设置几何体的位置
+        cube1.position.x = -10;
+        cube1.position.y = 5;
+        cube1.position.z =0;
+        //Lambert材质且castShadow=true，几何体上的光影才起效果
+        cube1.castShadow = true;
+        //将网格加入场景
+        scene.add(cube1);
+        //根据名称获取场景里的对象
+        var findObj=scene.getObjectByName("cub2",false)
+        console.log(findObj.position)
+        var removeObj=new function (){
+             this.removeAction=function(){
+                if(findObj instanceof THREE.Mesh)
+                {
+                    scene.remove(findObj);
+                }
+            }
+
+        }
+        var ctrl1 = new dat.GUI();
+        //将定义的对象传给dat.gui,0，1为取值范围，不传则显示输入框
+        //详细设置可参考https://blog.csdn.net/weixin_46941477/article/details/115551149
+        ctrl1.add(removeObj, "removeAction");
+        //endregion
 
         //三维坐标轴
         var axes = new THREE.AxesHelper(50);
@@ -103,8 +143,17 @@
             //旋转
             // cube.rotation.x+=0.05;
             // cube.rotation.y+=0.05;
-            cube.rotation.x += ctrlObj.rotationSpeed;
-            cube.rotation.y += ctrlObj.rotationSpeed;
+            // cube.rotation.x += ctrlObj.rotationSpeed;
+            // cube.rotation.y += ctrlObj.rotationSpeed;
+
+            //traverse遍历出所有对象
+            scene.traverse(function(obj){
+                if(obj instanceof THREE.Mesh&&obj!=plane)
+                {
+                    obj.rotation.x += ctrlObj.rotationSpeed;
+                    obj.rotation.y += ctrlObj.rotationSpeed;
+                }
+            })
 
             //跳跃速度
             // gap+=0.01
