@@ -70,18 +70,24 @@
         cube1.castShadow = true;
         //将网格加入场景
         scene.add(cube1);
+
+        //拉伸效果
+        var scaleObj={scaleObjX:1,scaleObjY:1,scaleObjZ:1}
+        var scalectrl = new dat.GUI();
+        scalectrl.add(scaleObj, "scaleObjX",-20,20);
+        scalectrl.add(scaleObj, "scaleObjY",-20,20);
+        scalectrl.add(scaleObj, "scaleObjZ",-20,20);
         //根据名称获取场景里的对象
         var findObj = scene.getObjectByName("cub2", false)
-        console.log(findObj.position)
         var removeObj = new function () {
             this.removeAction = function () {
                 if (findObj instanceof THREE.Mesh) {
                     scene.remove(findObj);
                 }
-            },
+            }
             this.addBoxCube = function () {
                 //Math.random()=[0,1)
-                var boxWidth=Math.random()*10+5 //[5,15)
+                var boxWidth = Math.random() * 10 + 5 //[5,15)
                 //创建几何体(此处正方体)
                 var geometryTemp = new THREE.BoxGeometry(boxWidth, boxWidth, boxWidth);
                 //创建材质
@@ -90,7 +96,7 @@
                 var cubeTemp = new THREE.Mesh(geometryTemp, materialTemp);
 
                 //设置几何体的位置
-                var boxPostion=Math.random()*10+20
+                var boxPostion = Math.random() * 10 + 20
                 cubeTemp.position.x = -boxPostion;
                 cubeTemp.position.y = boxPostion;
                 cubeTemp.position.z = -boxPostion;
@@ -99,12 +105,102 @@
                 //将网格加入场景
                 scene.add(cubeTemp);
             }
+            this.addBufferCube = function () {
+                //声明一个空几何体对象
+                var bufferTemp = new THREE.BufferGeometry();
+                //创建点数组
+                //立方体有8个点、6个面，面是3个顶点组合的三角形，立方体每个面则由2个三角形组成，即6个点组成一个面
+                var vertices = new Float32Array([
+                    //第一个面
+                    0, 0, 0,
+                    5, 0, 0,
+                    0, 5, 0,
+                    5, 0, 0,
+                    0, 5, 0,
+                    5, 5, 0,
+                    //第二个面
+                    0, 0, 0,
+                    0, 5, 0,
+                    0, 5, 5,
+                    0, 5, 5,
+                    0, 0, 0,
+                    0, 0, 5,
+                    //第三个面
+                    5, 0, 0,
+                    5, 5, 0,
+                    5, 5, 5,
+                    5, 0, 0,
+                    5, 0, 5,
+                    5, 5, 5,
+                    //第四个面
+                    0, 0, 0,
+                    0, 0, 5,
+                    5, 0, 0,
+                    5, 0, 0,
+                    5, 0, 5,
+                    0, 0, 5,
+                    //第五个面
+                    0, 5, 0,
+                    0, 5, 5,
+                    5, 5, 0,
+                    5, 5, 0,
+                    5, 5, 5,
+                    0, 5, 5,
+                    //第六个面
+                    0, 0, 5,
+                    5, 0, 5,
+                    0, 5, 5,
+                    5, 0, 5,
+                    0, 5, 5,
+                    5, 5, 5,
+                ])
+                //创建属性缓冲区对象
+                var attriBute = new THREE.BufferAttribute(vertices, 3);//3个为一组，作为顶点的xyz坐标
+                // 设置几何体attributes属性的位置position属性
+                bufferTemp.attributes.position = attriBute
+                //材质对象
+                var material = new THREE.MeshBasicMaterial({
+                    // 使用顶点颜色数据渲染模型，不需要再定义color属性
+                    color: 0x0000ff,
+                    side: THREE.DoubleSide  //使用两面均可视材质
+                });
+                var cubeTemp = new THREE.Mesh(bufferTemp, material);
+                scene.add(cubeTemp);
+
+                //几何体画线
+                var wireFrame = new THREE.WireframeGeometry(bufferTemp)
+                var line = new THREE.LineSegments(wireFrame)
+                line.material.depthTest = false
+                line.material.transparent = false
+                line.material.opacity = 0.25
+                scene.add(line)
+
+
+                var clonegeometry = cubeTemp.geometry.clone();
+                var clonematerial = new THREE.MeshBasicMaterial({
+                    color: 0x0000ff,
+                    side: THREE.DoubleSide  //使用两面均可视材质
+                });;
+                var cloneCube = new THREE.Mesh(clonegeometry, clonematerial);
+                cloneCube.translateZ(20)
+                cloneCube.name = "copy"
+                scene.remove(scene.getObjectByName("copy"))
+                scene.add(cloneCube);
+
+                var clonewireFrame = new THREE.WireframeGeometry(clonegeometry)
+                var cloneline = new THREE.LineSegments(clonewireFrame)
+                cloneline.material.depthTest = true
+                cloneline.translateZ(20)
+                scene.add(cloneline)
+
+            }
         }
         var ctrl1 = new dat.GUI();
         //将定义的对象传给dat.gui,0，1为取值范围，不传则显示输入框
         //详细设置可参考https://blog.csdn.net/weixin_46941477/article/details/115551149
         ctrl1.add(removeObj, "removeAction");
         ctrl1.add(removeObj, "addBoxCube");
+        ctrl1.add(removeObj, "addBufferCube");
         //endregion
 
         //三维坐标轴
@@ -159,6 +255,9 @@
         renderAnimation();
         var gap = 0;
         function renderAnimation() {
+            cube1.scale.x=scaleObj.scaleObjX
+            cube1.scale.y=scaleObj.scaleObjY
+            cube1.scale.z=scaleObj.scaleObjZ
             //旋转
             // cube.rotation.x+=0.05;
             // cube.rotation.y+=0.05;
@@ -168,8 +267,10 @@
             //traverse遍历出所有对象
             scene.traverse(function (obj) {
                 if (obj instanceof THREE.Mesh && obj != plane) {
-                    obj.rotation.x += ctrlObj.rotationSpeed;
-                    obj.rotation.y += ctrlObj.rotationSpeed;
+                    if (obj.geometry instanceof THREE.BoxGeometry) {
+                        // obj.rotation.x += ctrlObj.rotationSpeed;
+                        // obj.rotation.y += ctrlObj.rotationSpeed;
+                    }
                 }
             })
 
