@@ -60,32 +60,51 @@
         var boxMaterial1 = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
         //创建网格
         var cube1 = new THREE.Mesh(boxGeometry1, boxMaterial1);
-        cube1.name="cub2"
+        cube1.name = "cub2"
 
         //设置几何体的位置
         cube1.position.x = -10;
         cube1.position.y = 5;
-        cube1.position.z =0;
+        cube1.position.z = 0;
         //Lambert材质且castShadow=true，几何体上的光影才起效果
         cube1.castShadow = true;
         //将网格加入场景
         scene.add(cube1);
         //根据名称获取场景里的对象
-        var findObj=scene.getObjectByName("cub2",false)
+        var findObj = scene.getObjectByName("cub2", false)
         console.log(findObj.position)
-        var removeObj=new function (){
-             this.removeAction=function(){
-                if(findObj instanceof THREE.Mesh)
-                {
+        var removeObj = new function () {
+            this.removeAction = function () {
+                if (findObj instanceof THREE.Mesh) {
                     scene.remove(findObj);
                 }
-            }
+            },
+            this.addBoxCube = function () {
+                //Math.random()=[0,1)
+                var boxWidth=Math.random()*10+5 //[5,15)
+                //创建几何体(此处正方体)
+                var geometryTemp = new THREE.BoxGeometry(boxWidth, boxWidth, boxWidth);
+                //创建材质
+                var materialTemp = new THREE.MeshLambertMaterial({ color: 0x00ff11 });
+                //创建网格
+                var cubeTemp = new THREE.Mesh(geometryTemp, materialTemp);
 
+                //设置几何体的位置
+                var boxPostion=Math.random()*10+20
+                cubeTemp.position.x = -boxPostion;
+                cubeTemp.position.y = boxPostion;
+                cubeTemp.position.z = -boxPostion;
+                //Lambert材质且castShadow=true，几何体上的光影才起效果
+                cubeTemp.castShadow = true;
+                //将网格加入场景
+                scene.add(cubeTemp);
+            }
         }
         var ctrl1 = new dat.GUI();
         //将定义的对象传给dat.gui,0，1为取值范围，不传则显示输入框
         //详细设置可参考https://blog.csdn.net/weixin_46941477/article/details/115551149
         ctrl1.add(removeObj, "removeAction");
+        ctrl1.add(removeObj, "addBoxCube");
         //endregion
 
         //三维坐标轴
@@ -147,9 +166,8 @@
             // cube.rotation.y += ctrlObj.rotationSpeed;
 
             //traverse遍历出所有对象
-            scene.traverse(function(obj){
-                if(obj instanceof THREE.Mesh&&obj!=plane)
-                {
+            scene.traverse(function (obj) {
+                if (obj instanceof THREE.Mesh && obj != plane) {
                     obj.rotation.x += ctrlObj.rotationSpeed;
                     obj.rotation.y += ctrlObj.rotationSpeed;
                 }
@@ -166,13 +184,12 @@
         }
         //实现场景自适应功能：1.监听浏览器热死则时间，并通过回调重写事件 2。回调中重新设置camera的aspect属性，设置渲染的长宽比
         window.addEventListener("resize", onWIndowResize, false);
-        function onWIndowResize()
-        {
-            camera.aspect=window.innerWidth/window.innerHeight
+        function onWIndowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight
             //手动更新相机的投影矩阵
             camera.updateProjectionMatrix();
             //重置场景的渲染尺寸
-            camera.setSize(window.innerWidth,window.innerHeight);
+            camera.setSize(window.innerWidth, window.innerHeight);
         }
     </script>
 </body>
