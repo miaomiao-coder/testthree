@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>My first three.js app</title>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+<script src="./dat/dat.gui.js"></script>
+<script type="module">
+    import * as THREE from './three.js/Three.js';
+    // Our Javascript will go here.
+    //创建场景
+    var scene = new THREE.Scene();
+    //透视摄像头
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // var camera = new THREE.OrthographicCamera(window.innerWidth/-16, window.innerWidth / 16,
+    //      window.innerHeight/16, window.innerHeight / -16,-200,500);
+    //渲染器
+    const renderer = new THREE.WebGLRenderer();
+    //设置渲染器大小
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    //将渲染器作为body的子节点
+    document.body.appendChild(renderer.domElement);
+
+    renderer.shadowMap.enabled = true
+
+    //三维坐标轴
+    var axes = new THREE.AxesHelper(50);
+    //设置x、y、z轴线颜色
+    // axes.setColor();
+    scene.add(axes);
+    camera.position.x = -40
+    camera.position.y = 40;
+    camera.position.z = 50;
+    //将摄像机的方向对准场景的中心点，
+    camera.lookAt(scene.position);
+    //创建几何体
+    var planeGeometry = new THREE.PlaneGeometry(100, 100);
+    //创建材质
+    var planeMaterial = new THREE.MeshLambertMaterial({color: 0xcccccc});
+    //创建网格
+    var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    //Math.PI=180°
+    plane.rotation.x = -0.5 * Math.PI;
+    //平面接收光影
+    plane.receiveShadow = true;
+    //将网格加入场景
+    scene.add(plane);
+    //基本光源
+    //Lambert材质必须通过AmbientLight才能显示
+    //光照颜色、光照强度（越大越亮，默认1）
+    var ambientLight = new THREE.AmbientLight(0xAAAAAA, 1)
+    scene.add(ambientLight);
+
+    //聚光灯灯源
+    var spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.castShadow = true;
+    spotLight.position.set(-30, 40, -35);
+    //设置阴影效果
+    spotLight.shadow.mapSize = new THREE.Vector2(1024, 1024);
+    spotLight.shadow.camera.far = 120;
+    spotLight.shadow.camera.near = 40;
+    scene.add(spotLight);
+
+
+    var lightHelper = new THREE.SpotLightHelper(spotLight)
+    scene.add(lightHelper)
+    var shadowCameraHelper = new THREE.CameraHelper(spotLight.shadow.camera)
+    scene.add(shadowCameraHelper)
+
+    var ctrlObj = {
+        intensity: 1,
+        intensityColor: 0xAA0000,
+        spotintensity: 1,
+        spotintensityColor: 0xffffff,
+        spotlightdistance:1,
+        spotlightangle:Math.PI,
+        spotlightpenumbra:0,
+        spotlightdecay:0
+    }
+    var ctrl = new dat.GUI();
+    ctrl.add(ctrlObj, "intensity", 0, 5)
+    ctrl.addColor(ctrlObj, "intensityColor").onChange(clr => {
+        ambientLight.color = new THREE.Color(clr);
+    })
+    ctrl.add(ctrlObj, "spotintensity", 0, 5)
+    ctrl.addColor(ctrlObj, "spotintensityColor").onChange(clr => {
+        spotLight.color = new THREE.Color(clr);
+    })
+    ctrl.add(ctrlObj, "spotlightdistance",0,1000).onChange(dis => {
+        //光照距离
+        spotLight.distance =dis;
+    })
+    ctrl.add(ctrlObj, "spotlightangle",0,2*Math.PI).onChange(ang => {
+        //聚光灯角度
+        spotLight.angle =ang;
+    })
+    ctrl.add(ctrlObj, "spotlightpenumbra",0,1).onChange(pen => {
+        //阴影
+        spotLight.penumbra =pen;
+    })
+    ctrl.add(ctrlObj, "spotlightdecay",0,5).onChange(decay => {
+        //光照衰弱
+        spotLight.decay =decay;
+    })
+
+
+    var swaggleGeometry = new THREE.BoxGeometry(6, 6, 6)
+    var swaggleMaterial = new THREE.MeshLambertMaterial({color: 0xff1100})
+    var swaggleCube = new THREE.Mesh(swaggleGeometry, swaggleMaterial)
+    scene.add(swaggleCube)
+    swaggleCube.position.x = 0;
+    swaggleCube.position.y = 6;
+    swaggleCube.position.z = 0;
+    swaggleCube.castShadow = true
+
+    renderScene();
+
+    function renderScene() {
+        lightHelper.update()
+        shadowCameraHelper.update()
+        ambientLight.intensity = ctrlObj.intensity;
+        spotLight.intensity = ctrlObj.spotintensity
+        camera.lookAt(swaggleCube.position);
+        requestAnimationFrame(renderScene)
+        //渲染
+        renderer.render(scene, camera);
+    }
+</script>
+</body>
