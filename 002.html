@@ -72,11 +72,17 @@
         scene.add(cube1);
 
         //拉伸效果
+        //设置对象初始值
         var scaleObj={scaleObjX:1,scaleObjY:1,scaleObjZ:1}
+        var positionObj={positionObjX:-10,positionObjY:5,positionObjZ:0}
+        // rotation,visible,translate
         var scalectrl = new dat.GUI();
         scalectrl.add(scaleObj, "scaleObjX",-20,20);
         scalectrl.add(scaleObj, "scaleObjY",-20,20);
         scalectrl.add(scaleObj, "scaleObjZ",-20,20);
+        scalectrl.add(positionObj, "positionObjX",-20,20);
+        scalectrl.add(positionObj, "positionObjY",-20,20);
+        scalectrl.add(positionObj, "positionObjZ",-20,20);
         //根据名称获取场景里的对象
         var findObj = scene.getObjectByName("cub2", false)
         var removeObj = new function () {
@@ -182,6 +188,7 @@
                     side: THREE.DoubleSide  //使用两面均可视材质
                 });;
                 var cloneCube = new THREE.Mesh(clonegeometry, clonematerial);
+                //translateZ=沿Z轴一定距离平移
                 cloneCube.translateZ(20)
                 cloneCube.name = "copy"
                 scene.remove(scene.getObjectByName("copy"))
@@ -258,6 +265,7 @@
             cube1.scale.x=scaleObj.scaleObjX
             cube1.scale.y=scaleObj.scaleObjY
             cube1.scale.z=scaleObj.scaleObjZ
+            cube1.position.set(positionObj.positionObjX,positionObj.positionObjY,positionObj.positionObjZ)
             //旋转
             // cube.rotation.x+=0.05;
             // cube.rotation.y+=0.05;
