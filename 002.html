@@ -190,6 +190,13 @@
                 var cloneCube = new THREE.Mesh(clonegeometry, clonematerial);
                 //translateZ=沿Z轴一定距离平移
                 cloneCube.translateZ(20)
+                // var axis = new THREE.Vector3(0,1,0);//向量axis
+                // cloneCube.translateOnAxis(axis,100);//沿着向量axis方向平移100
+                // var axis = new THREE.Vector3(0,1,0);//向量axis
+                // cloneCube.rotateOnAxis(axis,Math.PI/8);//绕axis向量轴旋转π/8
+                // cloneCube.scale.x = 2.0;//x轴方向放大2倍
+                // cloneCube.scale.set(0.5,0.5,0.5);//缩小为原来0.5倍
+
                 cloneCube.name = "copy"
                 scene.remove(scene.getObjectByName("copy"))
                 scene.add(cloneCube);
