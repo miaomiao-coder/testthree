@@ -90,7 +90,7 @@
     `
     });
     // mix(floatx,float y,float a ) 返回x和y 的线性混合，即x(1-a)+ya
-    // vec4 tcolor3 = texture2D( texture3, vUv - vec2(time, - time * 0.01) );  //云朵会移动
+    // vec4 tcolor3 = texture2D( texture3, vUv - vec2(time, - time * 0.4) );  //云朵会移动
     var meshExtr = new THREE.Mesh(sphere, shadermaterial); //网格模型对象Mesh
     meshExtr.position.set(0, 0, 0);
     scene.add(meshExtr);
