@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script type="importmap">
+			{
+				"imports": {
+					"three": "../../build/three.module.js",
+					"three/addons/": "../../js/jsm/"
+				}
+			}
+
+
+
+</script>
+<script type="module">
+    import * as THREE from 'three';
+
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    import {CSS2DRenderer, CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js';
+
+    import {FontLoader} from 'three/addons/loaders/FontLoader.js';
+    import {TextGeometry} from 'three/addons/geometries/TextGeometry.js';
+    import Stats from 'three/addons/libs/stats.module.js';
+    //创建场景
+    var scene = new THREE.Scene();
+    //添加摄像头
+    var camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 10000);
+    camera.position.set(10, 10, 300); //设置相机位置
+    //将摄像机的方向对准场景的中心点，
+    camera.lookAt(scene.position);
+    scene.background = new THREE.Color( 0x050505 );
+
+    //三维坐标轴
+    var axes = new THREE.AxesHelper(50);
+    //设置x、y、z轴线颜色
+    // axes.setColor();
+    scene.add(axes);
+
+    //创建渲染器
+    var renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);//设置渲染区域尺寸
+    // renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
+    document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
+    const stats = new Stats();
+    document.body.appendChild( stats.dom );
+
+    const radius = 50, segments = 128, rings = 64;
+    //创建一个球体
+    const geometry = new THREE.SphereGeometry(radius, segments, rings);
+
+    const displacement = new Float32Array(geometry.attributes.position.count);
+    const noise = new Float32Array(geometry.attributes.position.count);
+
+    for (let i = 0; i < displacement.length; i++) {
+        noise[i] = Math.random() * 5;
+    }
+    geometry.setAttribute('displacement', new THREE.BufferAttribute(displacement, 1));
+    // const lamberMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff11 });
+
+    const uniforms = {
+
+        'amplitude': { value: 1.0 },
+        'color': { value: new THREE.Color( 0xff2200 ) },
+        'colorTexture': { value: new THREE.TextureLoader().load( '../imgs/textures/water.jpg' ) }
+
+    };
+
+    uniforms[ 'colorTexture' ].value.wrapS = uniforms[ 'colorTexture' ].value.wrapT = THREE.RepeatWrapping;
+
+    const shaderMaterial = new THREE.ShaderMaterial( {
+
+        uniforms: uniforms,
+        vertexShader: document.getElementById( 'vertexshader' ).textContent,
+        fragmentShader: document.getElementById( 'fragmentshader' ).textContent
+
+    } );
+    const sphereMesh = new THREE.Mesh(geometry, shaderMaterial);
+    scene.add(sphereMesh);
+
+
+    createControls();
+    render();
+
+    window.addEventListener( 'resize', onWindowResize );
+    function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+    }
+    //执行渲染操作
+    function render() {
+        renderer.render(scene, camera)
+        requestAnimationFrame(render)
+        update();
+        stats.update();
+    }
+
+    function createControls() {
+        var controls = new OrbitControls(camera, renderer.domElement); //创建鼠标控制对象
+    }
+    function update() {
+        const time = Date.now() * 0.01;
+        //旋转
+        sphereMesh.rotation.y = sphereMesh.rotation.z = 0.01 * time;
+        //变色
+        uniforms[ 'amplitude' ].value = 2.5 * Math.sin( sphereMesh.rotation.y * 0.125 );
+        uniforms[ 'color' ].value.offsetHSL( 0.0005, 0, 0 );
+        for ( let i = 0; i < displacement.length; i ++ ) {
+            displacement[ i ] = Math.sin( 0.1 * i + time );
+            noise[ i ] += 0.5 * ( 0.5 - Math.random() );
+            noise[ i ] = THREE.MathUtils.clamp( noise[ i ], - 5, 5 );
+            displacement[ i ] += noise[ i ];
+        }
+        // 如果要在第一次渲染后更改position数值，则需要像这样设置needsUpdate标志
+        sphereMesh.geometry.attributes.displacement.needsUpdate = true; // 需要加在第一次渲染之后
+
+    }
+</script>
+<script type="x-shader/x-vertex" id="vertexshader">
+
+			uniform float amplitude;
+
+			attribute float displacement;
+
+			varying vec3 vNormal;
+			varying vec2 vUv;
+
+			void main() {
+
+				vNormal = normal;
+				vUv = ( 0.5 + amplitude ) * uv + vec2( amplitude );
+
+				vec3 newPosition = position + amplitude * normal * vec3( displacement );
+				gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
+
+			}
+
+		</script>
+
+<script type="x-shader/x-fragment" id="fragmentshader">
+
+			varying vec3 vNormal;
+			varying vec2 vUv;
+
+			uniform vec3 color;
+			uniform sampler2D colorTexture;
+
+			void main() {
+
+				vec3 light = vec3( 0.5, 0.2, 1.0 );
+				light = normalize( light );
+
+				float dProd = dot( vNormal, light ) * 0.5 + 0.5;
+
+				vec4 tcolor = texture2D( colorTexture, vUv );
+				vec4 gray = vec4( vec3( tcolor.r * 0.3 + tcolor.g * 0.59 + tcolor.b * 0.11 ), 1.0 );
+
+				gl_FragColor = gray * vec4( vec3( dProd ) * vec3( color ), 1.0 );
+
+			}
+
+		</script>
+</body>
+</html>

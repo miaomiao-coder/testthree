@@ -195,7 +195,7 @@
         let worldGeometry = mapJson; //mapJson就是地图的json数据
         worldGeometry.features.forEach((worldItem, worldItemIndex) => {
             var properties = worldItem.properties;
-            drawText(properties);
+            elforspriteTest(properties);
             //循环遍历坐标
             worldItem.geometry.coordinates.forEach(worldChildItem => {
                 worldChildItem.forEach(countryItem => { //每个版块的点数组
@@ -213,17 +213,17 @@
         scene.add(lineGroup);
         console.log(group);
 
-        group.children.forEach(area=>{
-            const earthDiv = document.createElement('div');
-            earthDiv.className = 'labelclass';
-            earthDiv.textContent = area.name;
-            earthDiv.style.marginTop = '-1em';
-
-            const earthLabel = new CSS2DObject(earthDiv);
-            earthLabel.position.set(0,0,0);//相对于父级元素的位置
-            console.log(area);
-            area.add(earthLabel);
-        })
+        // group.children.forEach(area=>{
+        //     const earthDiv = document.createElement('div');
+        //     earthDiv.className = 'labelclass';
+        //     earthDiv.textContent = area.name;
+        //     earthDiv.style.marginTop = '-1em';
+        //
+        //     const earthLabel = new CSS2DObject(earthDiv);
+        //     earthLabel.position.set(0,0,0);//相对于父级元素的位置
+        //     console.log(area);
+        //     area.add(earthLabel);
+        // })
     }
 
     function drawShape(posArr) {
@@ -281,6 +281,44 @@
             scene.add(textMesh)
         });
 
+    }
+    //精灵文字
+    function elforspriteTest(properties)
+    {
+        let option = {
+                fontFamily: 'Arial',
+                fontSize: 20,
+                fontWeight: 'bold',
+                color: '0xff0000',
+                actualFontSize: 0.5,
+            },
+            canvas, context, textWidth, texture, materialObj, spriteObj;
+        canvas = document.createElement('canvas');
+        context = canvas.getContext('2d');
+        // 先设置字体大小后获取文本宽度
+        context.font = option.fontWeight + ' ' + option.fontSize + 'px ' + option.fontFamily;
+        textWidth = context.measureText(properties.name).width;
+
+        canvas.width = textWidth;
+        canvas.height = option.fontSize;
+
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillStyle = option.color;
+        context.font = option.fontWeight + ' ' + option.fontSize + 'px ' + option.fontFamily;
+        context.fillText(properties.name, textWidth / 2, option.fontSize / 1.8);
+
+        texture = new THREE.CanvasTexture(canvas);
+        materialObj = new THREE.SpriteMaterial({
+            map: texture
+        });
+        spriteObj = new THREE.Sprite(materialObj);
+        spriteObj.scale.set(textWidth / option.fontSize * option.actualFontSize, option.actualFontSize, option
+            .actualFontSize);
+
+        spriteObj.position.set((properties.center[0] - offsetX) * 10 - 0.1, (properties.center[1] - offsetY) * 10, distinceZ + 0.1)
+        scene.add(spriteObj)
+        return spriteObj;
     }
 
     function drawExtrude(shapeObj, properties) {
