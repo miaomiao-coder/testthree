@@ -1,60 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            color: #bbbbbb;
+            background: #333333;
+        }
+
+        .colorPicker {
+            display: inline-block;
+            margin: 0 10px
+        }
+
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        a, button, input, select {
+            pointer-events: auto;
+        }
+    </style>
 </head>
 <body>
+<div id="info">
+    <span class="colorPicker"><input id="body-color" type="color" value="#ff0000"></input><br/>Body</span>
+    <span class="colorPicker"><input id="details-color" type="color" value="#ffffff"></input><br/>Details</span>
+    <span class="colorPicker"><input id="glass-color" type="color" value="#ffffff"></input><br/>Glass</span>
+    <span class="colorPicker"><input id="start" type="radio" value="Start" name="voxel"></input><br/>Start</span>
+    <span class="colorPicker"><input id="stop" type="radio" value="Stop" name="voxel"></input><br/>Stop</span>
+    <span class="colorPicker"><input id="turnx" type="range" value="10"></input><br/>控制旋转角度</span>
+    <span class="colorPicker"><button id="radion-l" value="">左拐</button></span>
+    <span class="colorPicker"><button id="radion-r" value="">右拐</button></span>
+
+</div>
 <script type="importmap">
 			{
 				"imports": {
-					"three": "../build/three.module.js",
-					"three/addons/": "./js/jsm/"
+					"three": ".././build/three.module.js",
+					"three/addons/": "../../js/jsm/"
 				}
 			}
 
 
+
+
+
+
+
 </script>
 <script type="module">
-  import * as THREE from 'three';
+    import * as THREE from 'three';
 
-  import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-  import {CSS2DRenderer, CSS2DObject} from 'three/addons/renderers/CSS2DRenderer.js';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    import {RGBELoader} from 'three/addons/loaders/RGBELoader.js'
+    import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+    import {DRACOLoader} from "three/addons/loaders/DRACOLoader.js";
+    //创建场景
+    var scene = new THREE.Scene();
+    //添加摄像头
+    var camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(4.25, 1.4, -4.5); //设置相机位置
+    //将摄像机的方向对准场景的中心点，
+    camera.lookAt(scene.position);
 
-  import {FontLoader} from 'three/addons/loaders/FontLoader.js';
-  import {TextGeometry} from 'three/addons/geometries/TextGeometry.js';
-  //创建场景
-  var scene = new THREE.Scene();
-  //添加摄像头
-  var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 0, 10); //设置相机位置
-  //将摄像机的方向对准场景的中心点，
-  camera.lookAt(scene.position);
+    //三维坐标轴
+    var axes = new THREE.AxesHelper(50);
+    //设置x、y、z轴线颜色
+    // axes.setColor();
+    scene.add(axes);
 
-  //三维坐标轴
-  var axes = new THREE.AxesHelper(50);
-  //设置x、y、z轴线颜色
-  // axes.setColor();
-  scene.add(axes);
+    //创建渲染器
+    var renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);//设置渲染区域尺寸
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.85;
+    var controls;
 
-  //创建渲染器
-  var renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);//设置渲染区域尺寸
-  renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
-  document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
+    document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
+    scene.background = new THREE.Color(0x333333);
+    scene.environment = new RGBELoader().load('../imgs/equirectangular/venice_sunset_1k.hdr');
+    scene.environment.mapping = THREE.EquirectangularReflectionMapping;
+    scene.fog = new THREE.Fog(0x333333, 10, 15);
+    const grid = new THREE.GridHelper(20, 40, 0xffffff, 0xffffff);
+    grid.material.opacity = 0.2;
+    grid.material.depthWrite = false;
+    grid.material.transparent = true;
+    scene.add(grid);
+
+    //three.js加载glb模型  使用DRACOLoader解码
+    const dracoLoader = new DRACOLoader()
+    dracoLoader.setDecoderPath('../js/jsm/libs/draco/gltf/') // 设置解码路径，注意最后面的/
+    const loader = new GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
+
+    //轮胎数据用来控制滚动
+    const wheels = [];
+
+    // region 初始化材质
+    const bodyMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0xff0000, metalness: 1.0, roughness: 0.5, clearcoat: 1.0, clearcoatRoughness: 0.03, sheen: 0.5
+    });
+
+    const detailsMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff, metalness: 1.0, roughness: 0.5
+    });
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff, metalness: 0.25, roughness: 0, transmission: 1.0
+    });
+    //endregion
+
+    //region 修改材质
+    const bodyColorInput = document.getElementById('body-color');
+    bodyColorInput.addEventListener('input', function () {
+        bodyMaterial.color.set(this.value);
+    });
+
+    const detailsColorInput = document.getElementById('details-color');
+    detailsColorInput.addEventListener('input', function () {
+        detailsMaterial.color.set(this.value);
+    });
+
+    const glassColorInput = document.getElementById('glass-color');
+    glassColorInput.addEventListener('input', function () {
+        glassMaterial.color.set(this.value);
+    });
+    let ifStart=false;
+    const startRadio = document.getElementById('start');
+    const stopRadio = document.getElementById('stop');
+    startRadio.addEventListener('click', function () {
+        // renderer.setAnimationLoop(render);
+        ifStart=true;
+    });
+
+    stopRadio.addEventListener('click', function () {
+        // renderer.setAnimationLoop(null);
+        ifStart=false;
+    });
+
+    const radionrButton = document.getElementById('radion-r');
+    const radionlButton = document.getElementById('radion-l');
+    var worker ;
+
+    radionrButton.addEventListener('mousedown', function () {
+        worker = new Worker("../js/workerfunc.js");
+        worker.onmessage = function () {
+            carModel.rotation.y = carModel.rotation.y-0.001;
+        }
+    });
+    radionrButton.addEventListener('mouseup', function () {
+        worker.terminate();
+    });
+
+    radionlButton.addEventListener('mousedown', function () {
+        worker = new Worker("../js/workerfunc.js");
+        worker.onmessage = function () {
+            carModel.rotation.y = carModel.rotation.y+0.001;
+        }
+    });
+    radionlButton.addEventListener('mouseup', function () {
+        worker.terminate();
+    });
+    // endregion
+
+    const shadow = new THREE.TextureLoader().load('../js/jsm/models/gltf/ferrari_ao.png');
+    var carModel;
+    loader.load('../js/jsm/models/gltf/ferrari.glb', function (gltf) {
+        carModel = gltf.scene.children[0];
+        wheels.push(
+            carModel.getObjectByName('wheel_fl'),
+            carModel.getObjectByName('wheel_fr'),
+            carModel.getObjectByName('wheel_rl'),
+            carModel.getObjectByName('wheel_rr')
+        );
+
+        carModel.getObjectByName('body').material = bodyMaterial;
+        carModel.getObjectByName('rim_fl').material = detailsMaterial;
+        carModel.getObjectByName('rim_fr').material = detailsMaterial;
+        carModel.getObjectByName('rim_rr').material = detailsMaterial;
+        carModel.getObjectByName('rim_rl').material = detailsMaterial;
+        carModel.getObjectByName('trim').material = detailsMaterial;
+        carModel.getObjectByName('glass').material = glassMaterial;
 
 
-  createControls();
-  render();
-  //执行渲染操作
-  function render() {
-    renderer.render(scene, camera)
-    requestAnimationFrame(render)
-  }
-  function createControls() {
-    var controls = new OrbitControls(camera, renderer.domElement); //创建鼠标控制对象
-  }
+        // shadow
+        const mesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.655 * 4, 1.3 * 4),
+            new THREE.MeshBasicMaterial({
+                map: shadow, blending: THREE.MultiplyBlending, toneMapped: false, transparent: true
+            })
+        );
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.renderOrder = 2;
+        carModel.add(mesh);
+        scene.add(carModel);
+        const turnxInput = document.getElementById('turnx');
+        turnxInput.addEventListener('input', function () {
+            carModel.rotation.y = -(this.value);
+        });
+    })
+    createControls();
+    render();
+    //执行渲染操作
+    function render() {
+        controls.update();
+        renderer.render(scene, camera)
+        requestAnimationFrame(render)
+        // renderer.setAnimationLoop( render );  //效果同上
+        //https://juejin.cn/post/7077744904088059940
+        // renderer.setAnimationLoop(null); 停止
+        if(ifStart) {
+            const time = -performance.now() / 1000;
+            for (let i = 0; i < wheels.length; i++) {
+                wheels[i].rotation.x = time * Math.PI * 2;
+            }
+            //网格移动位置，视觉上车子在Z轴上移动
+            grid.position.z = -(time) % 1;
+            // carModel.rotation.y = time * 0.1 * Math.PI * 2;
+        }
+    }
+
+    function createControls() {
+        controls = new OrbitControls(camera, renderer.domElement); //创建鼠标控制对象
+        controls.enableDamping = true;
+        controls.maxDistance = 9;
+        controls.target.set(0, 0.5, 0);
+        controls.update();
+    }
 </script>
 </body>
 </html>

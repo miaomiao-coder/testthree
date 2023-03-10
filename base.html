@@ -44,17 +44,7 @@
   renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
   document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
 
-  var geometry = new THREE.Geometry();//新建门框的几何体
-  var wallArr = [
-    {s: [1, 20, 61], p: [45, 10, 0], dir: 'z', hasDoor: true, ds: [1, 18, 18], dp: [45, 9, 15], hasWindow: true, ws: [1, 10, 24], wp: [45, 10, -13]},
-    {s: [1, 20, 61], p: [-45, 10, 0], dir: 'z', hasDoor: false, hasWindow: true, ws: [1.2, 10, 50], wp: [-45, 10, 0]},
-    // {s: [46, 20, 1], p: [22.5, 10, 30], dir: 'x', hasDoor: false, hasWindow: true, ws: [30, 10, 1], wp: [22.5, 10, 30]},
-    // {s: [46, 20, 1], p: [-22.5, 10, 30], dir: 'x', hasDoor: false, hasWindow: true, ws: [30, 10, 1], wp: [-22.5, 10, 30]},
-    // {s: [46, 20, 1], p: [22.5, 10, -30], dir: 'x', hasDoor: false, hasWindow: true, ws: [30, 10, 1], wp: [22.5, 10, -30]},
-    // {s: [46, 20, 1], p: [-22.5, 10, -30], dir: 'x', hasDoor: false, hasWindow: true, ws: [30, 10, 1], wp: [-22.5, 10, -30]},
-    {s: [91, 20, 1], p: [0, 10, 30], dir: 'x', hasDoor: false, hasWindow: true, ws: [80, 10, 1], wp: [0, 10, 30]},
-    {s: [91, 20, 1], p: [0, 10, -30], dir: 'x', hasDoor: false, hasWindow: true, ws: [80, 10, 1], wp: [0, 10, -30]}
-  ];
+
 
   createControls();
   render();
