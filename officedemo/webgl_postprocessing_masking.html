@@ -95,15 +95,15 @@
     function render() {
         requestAnimationFrame(render)
         const time = performance.now() * 0.001 + 6000;
-        // box.position.x = Math.cos( time / 1.5 ) * 2;
-        // box.position.y = Math.sin( time ) * 2;
-        // box.rotation.x = time;
-        // box.rotation.y = time / 2;
-        //
-        // torus.position.x = Math.cos( time ) * 2;
-        // torus.position.y = Math.sin( time / 1.5 ) * 2;
-        // torus.rotation.x = time;
-        // torus.rotation.y = time / 2;
+        box.position.x = Math.cos( time / 1.5 ) * 2;
+        box.position.y = Math.sin( time ) * 2;
+        box.rotation.x = time;
+        box.rotation.y = time / 2;
+
+        torus.position.x = Math.cos( time ) * 2;
+        torus.position.y = Math.sin( time / 1.5 ) * 2;
+        torus.rotation.x = time;
+        torus.rotation.y = time / 2;
         renderer.clear();
         composer.render(time)
     }
