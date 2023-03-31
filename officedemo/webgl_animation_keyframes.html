@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script type="importmap">
+			{
+				"imports": {
+					"three": "../../build/three.module.js",
+					"three/addons/": "../../js/jsm/"
+				}
+			}
+
+
+
+
+</script>
+<script type="module">
+    import * as THREE from 'three';
+
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+    import {DRACOLoader} from "three/addons/loaders/DRACOLoader.js";
+    import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+
+    // 创建一个clock对象，用于跟踪时间
+    const clock = new THREE.Clock();
+
+    //添加摄像头
+    var camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(5, 2, 8);
+
+
+    //创建渲染器
+    var renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);//设置渲染区域尺寸
+    // 设置渲染的输出格式
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
+
+    //创建场景
+    var scene = new THREE.Scene();
+    // 建一个PMREMGenerator，从立方体映射环境纹理生成预过滤的 Mipmap 辐射环境贴图
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    // 设置背景色
+    scene.background = new THREE.Color(0xbfe3dd);
+    // 设置场景的纹理，从提供的场景中生成纹理
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+
+    // 将摄像机的方向对准场景的中心点，
+    camera.lookAt(scene.position);
+
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('../js/jsm/libs/draco/gltf/');
+
+    let mixer;
+    const loader = new GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
+    loader.load('../model/gltf/LittlestTokyo.glb', function (gltf) {
+
+        const model = gltf.scene;
+        //设置模型位置
+        model.position.set(1, 1, 0);
+        //设置视角
+        model.scale.set(0.01, 0.01, 0.01);
+        scene.add(model);
+
+        // 创建一个动画混合器，动画混合器是用于场景中特定对象的动画的播放器。当场景中的多个对象独立动画时，每个对象都可以使用同一个动画混合器。
+        mixer = new THREE.AnimationMixer(model);
+        // 设置剪辑动画
+        mixer.clipAction(gltf.animations[0]).play();
+        // 执行动画
+        animate();
+
+    }, undefined, function (e) {
+
+        console.error(e);
+
+    });
+
+
+    createControls();
+
+    //执行渲染操作
+    function animate() {
+        requestAnimationFrame(animate)
+        // 获取当前秒数
+        const delta = clock.getDelta();
+        // 更新动画混合器、轨道控制器
+        mixer.update(delta);
+        renderer.render(scene, camera)
+
+    }
+
+    function createControls() {
+        var controls = new OrbitControls(camera, renderer.domElement); //创建鼠标控制对象
+    }
+</script>
+</body>
+</html>
